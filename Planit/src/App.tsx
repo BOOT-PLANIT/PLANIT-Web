@@ -1,6 +1,6 @@
 import "./App.css";
 import useAuthStore from "./store/useAuthStore";
-import { loginWithGoogle, logout } from "./config/FirebaseConfig";
+import { loginWithGoogle, logout, deleteAccount } from "./lib/auth";
 
 export default function App() {
   const { isLoggedIn, account } = useAuthStore();
@@ -28,6 +28,7 @@ export default function App() {
           <p>Email: {account?.email ?? "(없음)"}{account?.emailVerified ? " ✅" : ""}</p>
           <p>Provider: {account?.provider ?? "(알 수 없음)"}</p>
           <button onClick={logout}>로그아웃</button>
+          <button onClick={deleteAccount}>회원탈퇴</button>
         </>
       )}
     </main>
