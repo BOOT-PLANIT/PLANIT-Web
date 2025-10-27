@@ -13,6 +13,8 @@ export type UserAccount = {
   emailVerified: boolean;
   createdAt?: string | null;
   lastLoginAt?: string | null;
+  fcmToken?: string | null;
+  alarmOn: boolean | true;
 };
 
 type AuthState = {
