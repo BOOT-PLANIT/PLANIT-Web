@@ -1,0 +1,37 @@
+set -eu
+echo "🔍 브랜치 네이밍 규칙 검사 실행"
+
+had_input=false
+while read -r local_ref local_sha remote_ref remote_sha; do
+  had_input=true
+  case "$remote_ref" in
+    refs/tags/*) continue ;; # 태그는 제외
+  esac
+
+  branch_name="${remote_ref#refs/heads/}"
+  case "$branch_name" in
+    main|develop) continue ;; # 보호 브랜치는 허용
+  esac
+
+  if ! echo "$branch_name" | grep -Eq '^(feat|fix|hotfix|refactor|style|docs|chore|test|release)/[a-z0-9._-]+$'; then
+    echo "❌ 브랜치 네이밍 규칙 위반"
+    echo "👉 규칙 예시: feat/login-api, fix/navbar-bug-210"
+    exit 1
+  fi
+done
+
+# STDIN이 비어 있을 경우 대비 (git push origin HEAD 등)
+if [ "$had_input" = false ]; then
+  branch_name="$(git rev-parse --abbrev-ref HEAD || echo '')"
+  case "$branch_name" in
+    ""|HEAD|main|develop) : ;; # 허용
+    *)
+      if ! echo "$branch_name" | grep -Eq '^(feat|fix|hotfix|refactor|style|docs|chore|test|release)/[a-z0-9._-]+$'; then
+        echo "❌ 브랜치 네이밍 규칙 위반"
+        exit 1
+      fi
+      ;;
+  esac
+fi
+
+echo "✅ 브랜치 네이밍 규칙 통과"

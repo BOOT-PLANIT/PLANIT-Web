@@ -1,0 +1,3 @@
+echo "🔍 lint-staged 실행"
+
+pnpm exec lint-staged

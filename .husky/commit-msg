@@ -1,0 +1,27 @@
+set -e   # 명령어 중 하나라도 실패하면 스크립트 즉시 종료 (-u는 뺌: $1 미전달 시 에러 방지)
+
+echo "🔍 커밋 메시지 규칙 검사"
+
+# 커밋 메시지가 저장된 파일 경로
+# 일반적으로 $1 로 전달되지만, 혹시 없으면 .git/COMMIT_EDITMSG 로 대체
+MSG_FILE="${1:-.git/COMMIT_EDITMSG}"
+
+# GitHub Desktop (Windows)에서는 줄바꿈이 CRLF(\r\n)로 저장돼서
+# 정규식 검사 시 줄 끝에 \r 이 남아 규칙이 깨질 수 있음
+# → \r 제거해서 LF만 남긴 임시 파일 생성
+TMP_FILE="$(mktemp)"                 # 임시 파일 생성
+tr -d '\r' < "$MSG_FILE" > "$TMP_FILE"  # \r 제거 후 TMP_FILE 에 저장
+
+# 프로젝트 로컬에 설치된 commitlint 실행 (pnpm exec 로 보장)
+# --edit 옵션: 파일 내용을 커밋 메시지로 해석해서 규칙 검사
+if ! pnpm exec commitlint --edit "$TMP_FILE"; then
+  echo ""
+  echo "❌ 커밋 메시지 규칙 위반"
+  echo "👉 규칙 예시: feat: 새로운 기능 추가 (#123)"
+  echo "📖 허용된 타입: feat, fix, refactor, style, format, docs, chore, add, del, test"
+  rm -f "$TMP_FILE"   # 임시 파일 정리
+  exit 1              # 검사 실패 → 커밋 중단
+fi
+
+rm -f "$TMP_FILE"     # 검사 성공 → 임시 파일 정리
+echo "✅ 커밋 메시지 규칙 통과"
